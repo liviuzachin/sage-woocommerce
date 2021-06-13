@@ -1,4 +1,5 @@
 <?php
+
 namespace App;
 
 if (defined('WC_ABSPATH')) {
@@ -10,17 +11,35 @@ if (defined('WC_ABSPATH')) {
      * @param string $template
      * @return string
      */
+    function sage_wc_template_locator(String $template)
+    {
+        return locate_template('resources/views/' . str_replace('.php', '.blade.php', WC()->template_path() . str_replace(WC_ABSPATH . 'templates/', '', $template)));
+    }
+
+    /**
+     * @param string $template
+     * @return string
+     */
+    function sage_wc_template_part_locator(String $template)
+    {
+        return locate_template('resources/views/woocommerce/' . str_replace('.php', '.blade.php', $template));
+    }
+
+    /**
+     * @param string $template
+     * @return string
+     */
     function wc_template_loader(String $template)
     {
         return strpos($template, WC_ABSPATH) === -1
             ? $template
-            : (locate_template(WC()->template_path() . str_replace(WC_ABSPATH . 'templates/', '', $template)) ? : $template);
+            : (sage_wc_template_locator($template) ?: $template);
     }
     add_filter('template_include', __NAMESPACE__ . '\\wc_template_loader', 100, 1);
     add_filter('comments_template', __NAMESPACE__ . '\\wc_template_loader', 100, 1);
 
     add_filter('wc_get_template_part', function ($template) {
-        $theme_template = locate_template(WC()->template_path() . str_replace(WC_ABSPATH . 'templates/', '', $template));
+        $theme_template = sage_wc_template_locator($template);
 
         if ($theme_template) {
             $data = collect(get_body_class())->reduce(function ($data, $class) {
@@ -35,7 +54,10 @@ if (defined('WC_ABSPATH')) {
     }, PHP_INT_MAX, 1);
 
     add_action('woocommerce_before_template_part', function ($template_name, $template_path, $located, $args) {
-        $theme_template = locate_template(WC()->template_path() . $template_name);
+        $theme_template = sage_wc_template_part_locator($template_name);
+        var_dump($template_name);
+        var_dump($theme_template);
+        // $theme_template = locate_template(WC()->template_path() . $template_name);
 
         if ($theme_template) {
             $data = collect(get_body_class())->reduce(function ($data, $class) {
@@ -54,8 +76,8 @@ if (defined('WC_ABSPATH')) {
         $theme_template = locate_template(WC()->template_path() . $template_name);
 
         // return theme filename for status screen
-        if (is_admin() && ! wp_doing_ajax() && function_exists('get_current_screen') && get_current_screen() && get_current_screen()->id === 'woocommerce_page_wc-status') {
-            return $theme_template ? : $template;
+        if (is_admin() && !wp_doing_ajax() && function_exists('get_current_screen') && get_current_screen() && get_current_screen()->id === 'woocommerce_page_wc-status') {
+            return $theme_template ?: $template;
         }
 
         // return empty file, output already rendered by 'woocommerce_before_template_part' hook
