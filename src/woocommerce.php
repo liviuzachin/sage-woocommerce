@@ -55,8 +55,6 @@ if (defined('WC_ABSPATH')) {
 
     add_action('woocommerce_before_template_part', function ($template_name, $template_path, $located, $args) {
         $theme_template = sage_wc_template_part_locator($template_name);
-        var_dump($template_name);
-        var_dump($theme_template);
         // $theme_template = locate_template(WC()->template_path() . $template_name);
 
         if ($theme_template) {
